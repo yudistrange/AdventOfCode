@@ -172,7 +172,7 @@ fn second_case(input: Vec<String>) -> u32 {
 }
 
 #[cfg(test)]
-mod tests {
+mod day1_tests {
     use super::*;
 
     #[test]
