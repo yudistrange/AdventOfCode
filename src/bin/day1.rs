@@ -85,6 +85,40 @@ fn token_parser(input: &str) -> IResult<&str, Expr> {
     ))(input)
 }
 
+fn modified_token_parser(input: &str) -> IResult<&str, Expr> {
+    let tags: Vec<&str> = vec![
+        "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+    ];
+
+    let cloned_tags = tags.clone();
+
+    let matched_tag = tags
+        .into_iter()
+        .filter(|m| input.starts_with(m))
+        .collect::<Vec<&str>>()
+        .pop();
+
+    match matched_tag {
+        Some(t) => {
+            let matched_tag_val: u32 = cloned_tags
+                .into_iter()
+                .position(|m| m == t)
+                .unwrap()
+                .try_into()
+                .unwrap();
+
+            let mut characters = input.chars();
+            let _ = characters.next();
+            let rest = characters.as_str();
+            Ok((rest, Expr::Num(matched_tag_val + 1)))
+        }
+        None => Err(nom::Err::Error(nom::error::Error {
+            input,
+            code: nom::error::ErrorKind::Tag,
+        })),
+    }
+}
+
 fn character_consumer(input: &str) -> IResult<&str, Expr> {
     let mut characters = input.chars();
     let first = characters.next();
@@ -102,7 +136,7 @@ fn character_consumer(input: &str) -> IResult<&str, Expr> {
 }
 
 fn combined_parser(input: &str) -> IResult<&str, Expr> {
-    alt((token_parser, digit_parser, character_consumer))(input)
+    alt((modified_token_parser, digit_parser, character_consumer))(input)
 }
 
 fn second_case(input: Vec<String>) -> u32 {
@@ -132,7 +166,6 @@ fn second_case(input: Vec<String>) -> u32 {
                 }
             };
 
-            println!("{} => {}", i, num);
             return num;
         })
         .sum()
